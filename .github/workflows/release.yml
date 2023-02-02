@@ -20,9 +20,12 @@ jobs:
           options: -v ${{ github.workspace }}:/work -v /var/run/docker.sock:/var/run/docker.sock
           run: |
             ls work && cd /work && dapper ci
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
       - uses: SierraSoftworks/gh-releases@v1.0.7
         with:
           token: ${{ secrets.TOKEN }}
           overwrite: 'true'
           files: |
-            dist/artifacts/k3k
+            ${{ github.workspace }}/dist/artifacts/k3k
