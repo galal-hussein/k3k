@@ -37,4 +37,5 @@ jobs:
           push: true
           tags: husseingalal/k3k:${{ github.ref_name }}
           file: ./package/Dockerfile
+          context: .
         
