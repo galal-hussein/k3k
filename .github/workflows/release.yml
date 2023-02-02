@@ -35,6 +35,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: husseingalal/k3k:${GITHUB_REF:10}
+          tags: husseingalal/k3k:${{ github.ref_name }}
           file: ${{ github.workspace }}/package/Dockerfile
         
