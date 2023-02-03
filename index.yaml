@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  k3k:
+  - apiVersion: v2
+    appVersion: v0.0.0-alpha3
+    created: "2023-02-03T04:51:28.135377624Z"
+    description: A Helm chart for K3K
+    digest: 1b1f63bd65464c52ffe95c8ab275b9d3ae7b8d5f104275ed66237d2b489730d5
+    name: k3k
+    type: application
+    urls:
+    - https://github.com/galal-hussein/k3k/releases/download/k3k-0.0.0-alpha3/k3k-0.0.0-alpha3.tgz
+    version: 0.0.0-alpha3
+generated: "2023-02-03T04:51:28.135386724Z"
