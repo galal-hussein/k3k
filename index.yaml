@@ -12,6 +12,16 @@ entries:
     - https://github.com/galal-hussein/k3k/releases/download/k3k-0.1.1/k3k-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v2
+    appVersion: 0.0.0-alpha3
+    created: "2023-02-03T16:00:28.173619815Z"
+    description: A Helm chart for K3K
+    digest: 5f6d94e7e3bea7e4035b8abf825d31780db317d65f97a2c0826494af2de8dc9a
+    name: k3k
+    type: application
+    urls:
+    - https://github.com/galal-hussein/k3k/releases/download/k3k-0.1.1-k3k1/k3k-0.1.1-k3k1.tgz
+    version: 0.1.1-k3k1
+  - apiVersion: v2
     appVersion: 0.1.0
     created: "2023-02-03T12:12:31.533482369Z"
     description: A Helm chart for K3K
@@ -31,4 +41,4 @@ entries:
     urls:
     - https://github.com/galal-hussein/k3k/releases/download/k3k-0.0.0-alpha3/k3k-0.0.0-alpha3.tgz
     version: 0.0.0-alpha3
-generated: "2023-02-03T12:18:38.072769793Z"
+generated: "2023-02-03T16:00:28.173639816Z"
