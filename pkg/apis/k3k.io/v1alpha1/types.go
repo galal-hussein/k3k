@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,20 +17,26 @@ type Cluster struct {
 }
 
 type ClusterSpec struct {
-	Version     string   `json:"version"`
-	Servers     *int32   `json:"servers"`
-	Agents      *int32   `json:"agents"`
-	Token       string   `json:"token"`
-	ClusterCIDR string   `json:"clusterCIDR,omitempty"`
-	ServiceCIDR string   `json:"serviceCIDR,omitempty"`
-	ClusterDNS  string   `json:"clusterDNS,omitempty"`
-	ServerArgs  []string `json:"serverArgs,omitempty"`
-	AgentArgs   []string `json:"agentArgs,omitempty"`
-	TLSSANs     []string `json:"tlsSANs,omitempty"`
-	Addons      []Addon  `json:"addons,omitempty"`
+	Version     string        `json:"version"`
+	Servers     *int32        `json:"servers"`
+	Agents      *int32        `json:"agents"`
+	Token       string        `json:"token"`
+	ClusterCIDR string        `json:"clusterCIDR,omitempty"`
+	ServiceCIDR string        `json:"serviceCIDR,omitempty"`
+	ClusterDNS  string        `json:"clusterDNS,omitempty"`
+	ServerArgs  []string      `json:"serverArgs,omitempty"`
+	AgentArgs   []string      `json:"agentArgs,omitempty"`
+	TLSSANs     []string      `json:"tlsSANs,omitempty"`
+	Addons      []Addon       `json:"addons,omitempty"`
+	Limits      ClusterLimits `json:"clusterLimit,omitempty"`
 
 	Persistence *PersistenceConfig `json:"persistence,omitempty"`
 	Expose      *ExposeConfig      `json:"expose,omitempty"`
+}
+
+type ClusterLimits struct {
+	ControlPlane map[string]resource.Quantity `json:"controlPlane,omitempty"`
+	Worker       map[string]resource.Quantity `json:"worker,omitempty"`
 }
 
 type Addon struct {
