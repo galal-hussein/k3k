@@ -51,6 +51,7 @@ type CreateConfig struct {
 	mirrorHostNodes      bool
 	customCertsPath      string
 	timeout              time.Duration
+	runtimeClassName     string
 }
 
 func NewClusterCreateCmd(appCtx *AppContext) *cobra.Command {
@@ -213,7 +214,8 @@ func newCluster(name, namespace string, config *CreateConfig) *v1beta1.Cluster {
 				StorageClassName:   ptr.To(config.storageClassName),
 				StorageRequestSize: config.storageRequestSize,
 			},
-			MirrorHostNodes: config.mirrorHostNodes,
+			MirrorHostNodes:  config.mirrorHostNodes,
+			RuntimeClassName: config.runtimeClassName,
 		},
 	}
 	if config.storageClassName == "" {

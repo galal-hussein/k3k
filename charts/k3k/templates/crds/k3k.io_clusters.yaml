@@ -449,6 +449,11 @@ spec:
                   PriorityClass specifies the priorityClassName for server/agent pods.
                   In "shared" mode, this also applies to workloads.
                 type: string
+              runtimeClassName:
+                description: |-
+                  RuntimeClassName specifies a runtime class on the host cluster to be used to run server and
+                  agent pods.
+                type: string
               serverArgs:
                 description: |-
                   ServerArgs specifies ordered key-value pairs for K3s server pods.

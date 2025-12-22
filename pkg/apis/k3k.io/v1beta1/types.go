@@ -183,6 +183,11 @@ type ClusterSpec struct {
 	// +kubebuilder:default={}
 	// +optional
 	Sync *SyncConfig `json:"sync,omitempty"`
+
+	// RuntimeClassName specifies a runtime class on the host cluster to be used to run server and
+	// agent pods.
+	// +optional
+	RuntimeClassName string `json:"runtimeClassName,omitempty"`
 }
 
 // SyncConfig will contain the resources that should be synced from virtual cluster to host cluster.

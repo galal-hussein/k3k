@@ -187,10 +187,7 @@ func (v *VirtualAgent) podSpec(image, name string, args []string, affinitySelect
 				Name:            name,
 				Image:           image,
 				ImagePullPolicy: v1.PullPolicy(v.ImagePullPolicy),
-				SecurityContext: &v1.SecurityContext{
-					Privileged: ptr.To(true),
-				},
-				Args: args,
+				Args:            args,
 				Command: []string{
 					"/bin/k3s",
 				},
@@ -248,6 +245,14 @@ func (v *VirtualAgent) podSpec(image, name string, args []string, affinitySelect
 
 	for _, imagePullSecret := range v.imagePullSecrets {
 		podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, v1.LocalObjectReference{Name: imagePullSecret})
+	}
+
+	// run privileged mode only when no runtimeclass is specified
+	if v.cluster.Spec.RuntimeClassName != "" {
+		podSpec.RuntimeClassName = ptr.To(v.cluster.Spec.RuntimeClassName)
+		podSpec.HostUsers = ptr.To(false)
+	} else {
+		podSpec.Containers[0].SecurityContext.Privileged = ptr.To(true)
 	}
 
 	return podSpec

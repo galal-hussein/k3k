@@ -32,6 +32,7 @@ func createFlags(cmd *cobra.Command, cfg *CreateConfig) {
 	cmd.Flags().StringVar(&cfg.policy, "policy", "", "The policy to create the cluster in")
 	cmd.Flags().StringVar(&cfg.customCertsPath, "custom-certs", "", "The path for custom certificate directory")
 	cmd.Flags().DurationVar(&cfg.timeout, "timeout", 3*time.Minute, "The timeout for waiting for the cluster to become ready (e.g., 10s, 5m, 1h).")
+	cmd.Flags().StringVar(&cfg.runtimeClassName, "runtime-class-name", "", "runtime class name for alternative runtime for server and agents")
 }
 
 func validateCreateConfig(cfg *CreateConfig) error {

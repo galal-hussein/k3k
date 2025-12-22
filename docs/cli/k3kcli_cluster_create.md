@@ -29,6 +29,7 @@ k3kcli cluster create [command options] NAME
   -n, --namespace string              namespace of the k3k cluster
       --persistence-type string       persistence mode for the nodes (dynamic, ephemeral) (default "dynamic")
       --policy string                 The policy to create the cluster in
+      --runtime-class-name string     runtime class name for alternative runtime for server and agents
       --server-args strings           servers extra arguments
       --server-envs strings           servers extra Envs
       --servers int                   number of servers (default 1)

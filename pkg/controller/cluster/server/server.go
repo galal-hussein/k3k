@@ -230,7 +230,7 @@ func (s *Server) podSpec(image, name string, persistent bool, startupCmd string)
 		},
 	}
 	// start the pod unprivileged in shared mode
-	if s.mode == agent.VirtualNodeMode {
+	if s.mode == agent.VirtualNodeMode && s.cluster.Spec.RuntimeClassName == "" {
 		podSpec.Containers[0].SecurityContext = &v1.SecurityContext{
 			Privileged: ptr.To(true),
 		}
@@ -361,6 +361,11 @@ func (s *Server) StatefulServer(ctx context.Context) (*apps.StatefulSet, error) 
 	podSpec := s.podSpec(image, name, persistent, startupCommand)
 	podSpec.Volumes = append(podSpec.Volumes, volumes...)
 	podSpec.Containers[0].VolumeMounts = append(podSpec.Containers[0].VolumeMounts, volumeMounts...)
+
+	if s.cluster.Spec.RuntimeClassName != "" {
+		podSpec.RuntimeClassName = ptr.To(s.cluster.Spec.RuntimeClassName)
+		podSpec.HostUsers = ptr.To(false)
+	}
 
 	ss := &apps.StatefulSet{
 		TypeMeta: metav1.TypeMeta{

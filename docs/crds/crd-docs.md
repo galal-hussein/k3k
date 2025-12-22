@@ -135,6 +135,7 @@ _Appears in:_
 | `mirrorHostNodes` _boolean_ | MirrorHostNodes controls whether node objects from the host cluster<br />are mirrored into the virtual cluster. |  |  |
 | `customCAs` _[CustomCAs](#customcas)_ | CustomCAs specifies the cert/key pairs for custom CA certificates. |  |  |
 | `sync` _[SyncConfig](#syncconfig)_ | Sync specifies the resources types that will be synced from virtual cluster to host cluster. | \{  \} |  |
+| `runtimeClassName` _string_ | RuntimeClassName specifies a runtime class on the host cluster to be used to run server and<br />agent pods. |  |  |
 
 
 
