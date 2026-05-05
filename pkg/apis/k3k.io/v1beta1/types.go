@@ -234,6 +234,24 @@ type ClusterSpec struct {
 	//
 	// +optional
 	HostUsers *bool `json:"hostUsers,omitempty"`
+	// ExternalDatastore sets the configuration for external database via kine.
+	// If set, then the virtual cluster servers will attempt to use kine to connect
+	// and use the configured endpoints, if not set then cluster servers will use
+	// embedded ETCD.
+	//
+	// +optional
+	ExternalDatastore *ExternalDatastoreConfig `json:"externalDatastore,omitempty"`
+}
+
+// ExternalDatastoreConfig defines the options for external datastore
+// if set then k3s server will use external datastore instead of embedded etcd.
+type ExternalDatastoreConfig struct {
+	// DatastoreEndpoint defines the connection string for external datastore
+	DatastoreEndpoint string `json:"datastoreEndpoint,omitempty"`
+	// DatastoreCertSecret defines the external datastore certificate and key pair
+	DatastoreCertSecret corev1.SecretVolumeSource `json:"datastoreCertSecret,omitempty"`
+	// DatastoreCACertSecret defines the external datastore CA certificate and key pair
+	DatastoreCACertSecret corev1.SecretVolumeSource `json:"datastoreCACertSecret,omitempty"`
 }
 
 // SecretMount defines a secret to be mounted into server or agent pods,

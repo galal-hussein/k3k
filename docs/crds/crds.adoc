@@ -236,6 +236,10 @@ agent and server pods of the cluster in virtual or shared mode. + |  |
 If set to true or not present, the pod will be run in the host user namespace. +
 When set to false, a new userns is created for the pod. +
 This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature. + |  | 
+| *`externalDatastore`* __xref:{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-externaldatastoreconfig[$$ExternalDatastoreConfig$$]__ | ExternalDatastore sets the configuration for external database via kine. +
+If set, then the virtual cluster servers will attempt to use kine to connect +
+and use the configured endpoints, if not set then cluster servers will use +
+embedded ETCD. + |  | 
 |===
 
 
@@ -381,6 +385,29 @@ _Appears In:_
 | *`ingress`* __xref:{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-ingressconfig[$$IngressConfig$$]__ | Ingress specifies options for exposing the API server through an Ingress. + |  | 
 | *`loadBalancer`* __xref:{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-loadbalancerconfig[$$LoadBalancerConfig$$]__ | LoadBalancer specifies options for exposing the API server through a LoadBalancer service. + |  | 
 | *`nodePort`* __xref:{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-nodeportconfig[$$NodePortConfig$$]__ | NodePort specifies options for exposing the API server through NodePort. + |  | 
+|===
+
+
+[id="{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-externaldatastoreconfig"]
+=== ExternalDatastoreConfig
+
+
+
+ExternalDatastoreConfig defines the options for external datastore
+if set then k3s server will use external datastore instead of embedded etcd.
+
+
+
+_Appears In:_
+
+* xref:{anchor_prefix}-github-com-rancher-k3k-pkg-apis-k3k-io-v1beta1-clusterspec[$$ClusterSpec$$]
+
+[cols="25a,55a,10a,10a", options="header"]
+|===
+| Field | Description | Default | Validation
+| *`datastoreEndpoint`* __string__ | DatastoreEndpoint defines the connection string for external datastore + |  | 
+| *`datastoreCertSecret`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretvolumesource-v1-core[$$SecretVolumeSource$$]__ | DatastoreCertSecret defines the external datastore certificate and key pair + |  | 
+| *`datastoreCACertSecret`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretvolumesource-v1-core[$$SecretVolumeSource$$]__ | DatastoreCACertSecret defines the external datastore CA certificate and key pair + |  | 
 |===
 
 

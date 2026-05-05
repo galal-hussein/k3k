@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"go.yaml.in/yaml/v2"
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
 	"github.com/rancher/k3k/pkg/controller"
@@ -26,6 +27,10 @@ type serverConfig struct {
 	ClusterCIDR        string   `yaml:"cluster-cidr,omitempty"`
 	ServiceCIDR        string   `yaml:"service-cidr,omitempty"`
 	ClusterDNS         string   `yaml:"cluster-dns,omitempty"`
+	DataStoreEndpoint  string   `yaml:"datastore-endpoint"`
+	DataStoreCAFile    string   `yaml:"datastore-cafile,omitempty"`
+	DataStoreCertFile  string   `yaml:"datastore-certfile,omitempty"`
+	DataStoreKeyFile   string   `yaml:"datastore-keyfile,omitempty"`
 }
 
 func (s *Server) Config(init bool, serviceIP string) (*corev1.Secret, error) {
@@ -64,12 +69,13 @@ func buildServerConfig(cluster *v1beta1.Cluster, initServer bool, serviceIP, tok
 	cluster.Status.TLSSANs = sans.List()
 
 	serverConfig := serverConfig{
-		ClusterInit: true,
-		Token:       token,
-		TlsSAN:      cluster.Status.TLSSANs,
-		ServiceCIDR: cluster.Status.ServiceCIDR,
-		ClusterCIDR: cluster.Status.ClusterCIDR,
-		ClusterDNS:  cluster.Spec.ClusterDNS,
+		ClusterInit:       true,
+		Token:             token,
+		TlsSAN:            cluster.Status.TLSSANs,
+		ServiceCIDR:       cluster.Status.ServiceCIDR,
+		ClusterCIDR:       cluster.Status.ClusterCIDR,
+		ClusterDNS:        cluster.Spec.ClusterDNS,
+		DataStoreEndpoint: cluster.Spec.ExternalDatastore,
 	}
 
 	if !initServer {

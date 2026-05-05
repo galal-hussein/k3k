@@ -168,6 +168,7 @@ _Appears in:_
 | `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#securitycontext-v1-core)_ | SecurityContext specifies custom SecurityContext to be added<br />to the agent and server pods of the cluster in virtual or shared mode.<br />This option will override the SecurityContext set by default for virtual mode. |  |  |
 | `runtimeClassName` _string_ | RuntimeClassName specifies alternative runtime class for the<br />agent and server pods of the cluster in virtual or shared mode. |  |  |
 | `hostUsers` _boolean_ | HostUsers sets the user namespace for server and agent pods.<br />If set to true or not present, the pod will be run in the host user namespace.<br />When set to false, a new userns is created for the pod.<br />This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature. |  |  |
+| `externalDatastore` _[ExternalDatastoreConfig](#externaldatastoreconfig)_ | ExternalDatastore sets the configuration for external database via kine.<br />If set, then the virtual cluster servers will attempt to use kine to connect<br />and use the configured endpoints, if not set then cluster servers will use<br />embedded ETCD. |  |  |
 
 
 #### ClusterStatus
@@ -284,6 +285,25 @@ _Appears in:_
 | `ingress` _[IngressConfig](#ingressconfig)_ | Ingress specifies options for exposing the API server through an Ingress. |  |  |
 | `loadBalancer` _[LoadBalancerConfig](#loadbalancerconfig)_ | LoadBalancer specifies options for exposing the API server through a LoadBalancer service. |  |  |
 | `nodePort` _[NodePortConfig](#nodeportconfig)_ | NodePort specifies options for exposing the API server through NodePort. |  |  |
+
+
+#### ExternalDatastoreConfig
+
+
+
+ExternalDatastoreConfig defines the options for external datastore
+if set then k3s server will use external datastore instead of embedded etcd.
+
+
+
+_Appears in:_
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `datastoreEndpoint` _string_ | DatastoreEndpoint defines the connection string for external datastore |  |  |
+| `datastoreCertSecret` _[SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretvolumesource-v1-core)_ | DatastoreCertSecret defines the external datastore certificate and key pair |  |  |
+| `datastoreCACertSecret` _[SecretVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretvolumesource-v1-core)_ | DatastoreCACertSecret defines the external datastore CA certificate and key pair |  |  |
 
 
 #### IngressConfig
