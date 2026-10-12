@@ -223,7 +223,7 @@ func (*Reconciler) mapRestoreToCluster(ctx context.Context, obj client.Object) [
 		return nil
 	}
 
-	if restore.Spec.ClusterRef.Name == "" {
+	if restore.Spec.ClusterRef == nil || restore.Spec.ClusterRef.Name == "" {
 		return nil
 	}
 
@@ -377,7 +377,7 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 
 	// set the status to restore and active restore status to the restore obj name and update the cluster if only status changed
 	cluster.Status.Phase = v1beta1.ClusterRestoring
-	cluster.Status.ActiveRestoreRef.Name = eligibleRestore.Name
+	cluster.Status.ActiveRestoreRef = &corev1.LocalObjectReference{Name: eligibleRestore.Name}
 	meta.SetStatusCondition(&cluster.Status.Conditions, metav1.Condition{
 		Type:    ConditionReady,
 		Status:  metav1.ConditionFalse,
@@ -426,7 +426,7 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 
 		c.Eventf(cluster, nil, corev1.EventTypeWarning, ReasonRestoringFailed, ActionReconciling, restoreErr.Error())
 	} else {
-		cluster.Status.ActiveRestoreRef = corev1.LocalObjectReference{}
+		cluster.Status.ActiveRestoreRef = nil
 		cluster.Status.Phase = v1beta1.ClusterReady
 		meta.SetStatusCondition(&cluster.Status.Conditions, metav1.Condition{
 			Type:    ConditionReady,
