@@ -136,6 +136,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reco
 func (r *Reconciler) reconcileSnapshot(ctx context.Context, snapshot *v1beta1.EtcdSnapshot) error {
 	var cluster v1beta1.Cluster
 
+	if snapshot.Spec.ClusterRef == nil {
+		return errors.New("cluster ref is missing")
+	}
+
 	nn := types.NamespacedName{
 		Name:      snapshot.Spec.ClusterRef.Name,
 		Namespace: snapshot.Namespace,
@@ -243,8 +247,8 @@ func (r *Reconciler) finalizeSnapshot(ctx context.Context, snapshot *v1beta1.Etc
 func (r *Reconciler) deleteSnapshot(ctx context.Context, snapshot *v1beta1.EtcdSnapshot) error {
 	log := log.FromContext(ctx)
 
-	// no op if there is no snapshot file reference
-	if snapshot.Status.Filename == "" {
+	// no op if there is no snapshot file reference or cluster isn't referenced
+	if snapshot.Status.Filename == "" || snapshot.Spec.ClusterRef == nil {
 		return nil
 	}
 

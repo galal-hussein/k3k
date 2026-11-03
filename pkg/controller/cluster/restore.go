@@ -145,7 +145,7 @@ func (c *Reconciler) findEligibleRestore(ctx context.Context, cluster *v1beta1.C
 	var oldestRestoreObj *v1beta1.EtcdRestore
 
 	for _, restoreObj := range restoreList.Items {
-		if restoreObj.Spec.ClusterRef.Name != cluster.Name {
+		if restoreObj.Spec.ClusterRef == nil || restoreObj.Spec.ClusterRef.Name != cluster.Name {
 			continue
 		}
 
@@ -236,6 +236,10 @@ func isRestoreFailed(restore *v1beta1.EtcdRestore) bool {
 }
 
 func (*Reconciler) validateSnapshot(cluster *v1beta1.Cluster, snapshot v1beta1.EtcdSnapshot) error {
+	if snapshot.Spec.ClusterRef == nil {
+		return errors.New("cluster ref is missing")
+	}
+
 	// validation for snapshot
 	if snapshot.Spec.ClusterRef.Name != cluster.Name {
 		return errors.New("cluster name does not match the snapshot cluster reference")

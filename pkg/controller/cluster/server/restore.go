@@ -55,7 +55,7 @@ func (s *Server) baseRestorePodSpec(ctx context.Context, image, name string, ser
 
 	return corev1.PodSpec{
 		Affinity:          serverAffinity,
-		NodeSelector:      s.cluster.Spec.NodeSelector,
+		NodeSelector:      NodeSelector(s.cluster),
 		PriorityClassName: s.cluster.Spec.PriorityClass,
 		RestartPolicy:     corev1.RestartPolicyNever,
 		Volumes: []corev1.Volume{

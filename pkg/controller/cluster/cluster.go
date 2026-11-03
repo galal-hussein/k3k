@@ -426,7 +426,6 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 
 		c.Eventf(cluster, nil, corev1.EventTypeWarning, ReasonRestoringFailed, ActionReconciling, restoreErr.Error())
 	} else {
-		cluster.Status.ActiveRestoreRef = nil
 		cluster.Status.Phase = v1beta1.ClusterReady
 		meta.SetStatusCondition(&cluster.Status.Conditions, metav1.Condition{
 			Type:    ConditionReady,
@@ -437,6 +436,9 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 
 		c.Eventf(cluster, nil, corev1.EventTypeNormal, RestoreReasonCompleted, ActionReconciling, "Cluster successfully restored")
 	}
+
+	// remove the active restore reference from the cluster
+	cluster.Status.ActiveRestoreRef = nil
 
 	if !equality.Semantic.DeepEqual(cluster.Status, origCluster.Status) {
 		return reconcile.Result{}, c.Client.Status().Update(ctx, cluster)
