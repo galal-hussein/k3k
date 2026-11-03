@@ -400,7 +400,7 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 		return reconcile.Result{RequeueAfter: time.Second}, nil
 	}
 
-	restoreErr := c.restore(ctx, cluster, eligibleRestore)
+	restoreInProgress, restoreErr := c.restore(ctx, cluster, eligibleRestore)
 	// update restore object status
 	c.updateRestoreStatus(eligibleRestore, restoreErr)
 
@@ -412,8 +412,13 @@ func (c *Reconciler) restoreCluster(ctx context.Context, cluster *v1beta1.Cluste
 
 	// update cluster status with restoration error or success
 	if restoreErr != nil {
-		if isRestoreInProgress(eligibleRestore) || apierrors.IsConflict(restoreErr) {
-			return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+		// check if restore has a transient or in progress error
+		if isRestoreUnknown(eligibleRestore) {
+			if restoreInProgress {
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			}
+
+			return reconcile.Result{}, restoreErr
 		}
 
 		cluster.Status.Phase = v1beta1.ClusterFailed

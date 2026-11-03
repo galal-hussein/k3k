@@ -35,6 +35,8 @@ func (s *Server) restorePodSpec(ctx context.Context, image, name string, snapsho
 
 	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, s.cluster.Spec.ServerEnvs...)
 
+	s.applySecuritySettings(ctx, &podSpec)
+
 	for _, imagePullSecret := range s.imagePullSecrets {
 		podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, corev1.LocalObjectReference{Name: imagePullSecret})
 	}
@@ -161,7 +163,7 @@ func restorePodCommand(snapshotPath string, serverIndex int) []string {
 		return []string{
 			"/bin/sh",
 			"-cx",
-			"rm -rf /var/lib/rancher/k3s/server/tls/* && if [ -d /var/lib/rancher/k3s/server/db ]; then mv /var/lib/rancher/k3s/server/db /var/lib/rancher/k3s/server/db-old-$(date +%Y%m%d_%H%M%S); fi",
+			"rm -rf /var/lib/rancher/k3s/server/tls/* /var/lib/rancher/k3s/server/db",
 		}
 	}
 

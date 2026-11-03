@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -13,7 +14,6 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -33,42 +33,54 @@ const (
 	RestoreReasonCompleted = "RestoreCompleted"
 	// RestoreReasonValidationFailed is set when validating a snapshot fails.
 	RestoreReasonValidationFailed = "SnapshotValidationFailed"
+	// RestoreReasonPersistenceValidationFailed is set when validating a cluster persistence mode fails.
+	RestoreReasonPersistenceValidationFailed = "PersistenceValidationFailed"
 )
 
 var (
-	// ErrRestoreJobInProgress This error indicates that job for restoring the snapshot is still in progress
-	ErrRestoreJobInProgress = errors.New("cluster restore jobs are in progress")
-	// ErrRestoreScalingInProgress This error indicates that scaling down servers to 0 is still in progress
-	ErrRestoreScalingInProgress = errors.New("scaling down in progress")
 	// ErrRestoreSnapshotValidation This error indicates validation for snapshot is invalid
 	ErrRestoreSnapshotValidation = errors.New("snapshot validation error")
+	// ErrRestoreClusterPersistenceValidation This error indicates validation for cluster persistence mode is invalid
+	ErrRestoreClusterPersistenceValidation = errors.New("restoration requires dynamic persistence mode")
+	// ErrRestoreJobFailure This error indicates restoration job has failed
+	ErrRestoreJobFailure = errors.New("restoration job has failed")
 )
 
 // restore will trigger a restoration for virtual cluster which consists of the following phases:
-// 1. Scale down servers to 0 pods
-// 2. Start a restoration jobs that mounts the each server PVC and run restoration for init server and scrub data for other servers
-// 3. Check restoration jobs status if completed then exit and trigger normal reconcile
-func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, restoreObj *v1beta1.EtcdRestore) error {
+// 1. Scale down servers to 0 pods.
+// 2. Start a restoration jobs that mounts the each server PVC and run restoration for init server and scrub data for other servers.
+// 3. Check restoration jobs status if completed then exit and trigger normal reconcile.
+//
+// Only snapshot validation, cluster persistence validation, and job failure will be considered as final error and will mark
+// the restore as failed, otherwise the reconciler will attempt the restoration again.
+//
+// The returned bool is true while scaling down the servers or the restoration jobs are still in progress, in that case
+// the returned error only describes the current progress and is not a failure.
+func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, restoreObj *v1beta1.EtcdRestore) (bool, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("EtcdRestore", restoreObj.Name)
 
 	// fail if the cluster is using ephemeral storage
 	if cluster.Spec.Persistence.Type != v1beta1.DynamicPersistenceMode {
-		return errors.New("cluster restoration is only enabled with persistence mode")
+		return false, ErrRestoreClusterPersistenceValidation
 	}
 
 	token, err := c.token(ctx, cluster)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var snapshot v1beta1.EtcdSnapshot
 
 	if err := c.Client.Get(ctx, types.NamespacedName{Name: restoreObj.Spec.SnapshotRef.Name, Namespace: cluster.Namespace}, &snapshot); err != nil {
-		return err
+		if apierrors.IsNotFound(err) {
+			return false, fmt.Errorf("%w: %w", ErrRestoreSnapshotValidation, err)
+		}
+
+		return false, err
 	}
 
 	if err := c.validateSnapshot(cluster, snapshot); err != nil {
-		return fmt.Errorf("%w: %w", ErrRestoreSnapshotValidation, err)
+		return false, fmt.Errorf("%w: %w", ErrRestoreSnapshotValidation, err)
 	}
 
 	origServerCount := int(*cluster.Spec.Servers)
@@ -76,7 +88,7 @@ func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, rest
 	s := server.New(cluster, c.Client, token, c.K3SServerImage, c.K3SServerImagePullPolicy, c.ServerImagePullSecrets)
 
 	if err := c.server(ctx, cluster, s, nil); err != nil {
-		return err
+		return false, err
 	}
 
 	// make sure that servers scaled down to 0 servers
@@ -90,17 +102,17 @@ func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, rest
 
 	var serverPods corev1.PodList
 	if err := c.Client.List(ctx, &serverPods, listOpts); err != nil {
-		return err
+		return false, err
 	}
 
 	if len(serverPods.Items) > 0 {
-		return ErrRestoreScalingInProgress
+		return true, errors.New("scaling down servers is in progress")
 	}
 
 	// Phase 2: start a restoration jobs with the same k3s image
 	jobList, err := s.RestoreJobs(ctx, restoreObj, &snapshot, origServerCount)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	completeCount := 0
@@ -110,12 +122,12 @@ func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, rest
 			return controllerutil.SetControllerReference(restoreObj, &job, c.Client.Scheme())
 		})
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		for _, cond := range job.Status.Conditions {
 			if cond.Type == batchv1.JobFailed && cond.Status == corev1.ConditionTrue {
-				return fmt.Errorf("job has failed to restore the snapshot: %s", cond.Message)
+				return false, fmt.Errorf("%w: %s", ErrRestoreJobFailure, cond.Message)
 			}
 
 			if cond.Type == batchv1.JobComplete && cond.Status == corev1.ConditionTrue {
@@ -125,12 +137,12 @@ func (c *Reconciler) restore(ctx context.Context, cluster *v1beta1.Cluster, rest
 	}
 
 	if completeCount < origServerCount {
-		return ErrRestoreJobInProgress
+		return true, errors.New("restoration job is in progress")
 	}
 
 	log.Info("Restore jobs completed successfully")
 
-	return nil
+	return false, nil
 }
 
 // findEligibleRestore will list restore objects for the passed cluster, if any active restore
@@ -155,7 +167,7 @@ func (c *Reconciler) findEligibleRestore(ctx context.Context, cluster *v1beta1.C
 		}
 
 		// return the restore object currently in progress
-		if isRestoreInProgress(&restoreObj) {
+		if isRestoreUnknown(&restoreObj) {
 			return &restoreObj, nil
 		}
 
@@ -197,12 +209,18 @@ func (*Reconciler) updateRestoreStatus(restore *v1beta1.EtcdRestore, lastErr err
 			return
 		}
 
-		if !errors.Is(lastErr, ErrRestoreJobInProgress) && !errors.Is(lastErr, ErrRestoreScalingInProgress) && !apierrors.IsConflict(lastErr) {
+		if errors.Is(lastErr, ErrRestoreClusterPersistenceValidation) {
+			setRestoreCondition(status, RestoreSucceededCondition, metav1.ConditionFalse, RestoreReasonPersistenceValidationFailed, err)
+			return
+		}
+
+		if errors.Is(lastErr, ErrRestoreJobFailure) {
 			setRestoreCondition(status, RestoreSucceededCondition, metav1.ConditionFalse, RestoreReasonFailed, err)
 			return
 		}
 
-		setRestoreCondition(status, RestoreSucceededCondition, metav1.ConditionUnknown, RestoreReasonInProgress, "Restore is in progress")
+		// any other error will be treated as transient error
+		setRestoreCondition(status, RestoreSucceededCondition, metav1.ConditionUnknown, RestoreReasonInProgress, err)
 
 		return
 	}
@@ -211,7 +229,7 @@ func (*Reconciler) updateRestoreStatus(restore *v1beta1.EtcdRestore, lastErr err
 	setRestoreCondition(status, RestoreSucceededCondition, metav1.ConditionTrue, RestoreReasonCompleted, fmt.Sprintf("Completed restore of %s snapshot", restore.Spec.SnapshotRef.Name))
 }
 
-func isRestoreInProgress(restore *v1beta1.EtcdRestore) bool {
+func isRestoreUnknown(restore *v1beta1.EtcdRestore) bool {
 	if restore == nil || restore.Status.Conditions == nil {
 		return false
 	}
@@ -274,7 +292,7 @@ func (c *Reconciler) finalizeRestore(ctx context.Context, restoreObj *v1beta1.Et
 		}
 
 		if isJobInProgress(job) {
-			return reconcile.Result{}, fmt.Errorf("%w: %s", ErrRestoreJobInProgress, job.Name)
+			return reconcile.Result{}, fmt.Errorf("%s: restore job is in progress", job.Name)
 		}
 	}
 
