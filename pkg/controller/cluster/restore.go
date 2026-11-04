@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"regexp"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
@@ -265,6 +267,21 @@ func (*Reconciler) validateSnapshot(cluster *v1beta1.Cluster, snapshot v1beta1.E
 
 	if snapshot.Status.Filename == "" {
 		return errors.New("snapshot filename is missing")
+	}
+
+	if snapshot.Status.Filename == "" {
+		return errors.New("snapshot filename is missing")
+	}
+
+	name := snapshot.Status.Filename
+
+	if filepath.Base(name) != name || !filepath.IsLocal(name) {
+		return fmt.Errorf("invalid snapshot filename %q: must be a plain file name", name)
+	}
+
+	snapshotFilenameRegex := regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+	if !snapshotFilenameRegex.MatchString(name) {
+		return fmt.Errorf("invalid snapshot filename %q: contains invalid characters", name)
 	}
 
 	return nil

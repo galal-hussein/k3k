@@ -29,16 +29,19 @@ func (s *Server) restorePodSpec(ctx context.Context, image, name string, snapsho
 		path = snapshot.Status.Filename
 	}
 
-	cmd := restorePodCommand(path, serverIndex)
+	cmd := restorePodCommand(serverIndex)
 
 	podSpec.Containers[0].Command = cmd
 
-	podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, s.cluster.Spec.ServerEnvs...)
-
 	s.applySecuritySettings(ctx, &podSpec)
 
-	for _, imagePullSecret := range s.imagePullSecrets {
-		podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, corev1.LocalObjectReference{Name: imagePullSecret})
+	if serverIndex == 0 {
+		podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, s.cluster.Spec.ServerEnvs...)
+		podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, corev1.EnvVar{Name: "SNAPSHOT_PATH", Value: path})
+
+		for _, imagePullSecret := range s.imagePullSecrets {
+			podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, corev1.LocalObjectReference{Name: imagePullSecret})
+		}
 	}
 
 	return podSpec
@@ -158,7 +161,7 @@ func buildS3ConfigVolume(secretName string) corev1.VolumeProjection {
 	}
 }
 
-func restorePodCommand(snapshotPath string, serverIndex int) []string {
+func restorePodCommand(serverIndex int) []string {
 	if serverIndex > 0 {
 		return []string{
 			"/bin/sh",
@@ -171,7 +174,7 @@ func restorePodCommand(snapshotPath string, serverIndex int) []string {
 		"/bin/sh",
 		"-c",
 		"rm -rf /var/lib/rancher/k3s/server/tls/*" +
-			" && k3s server -c /opt/rancher/k3s/server/config.yaml --disable-agent --cluster-reset --cluster-reset-restore-path " + snapshotPath +
+			" && k3s server -c /opt/rancher/k3s/server/config.yaml --disable-agent --cluster-reset --cluster-reset-restore-path \"$SNAPSHOT_PATH\"" +
 			" && touch /var/lib/rancher/k3s/server/db/restore-flag" +
 			" && rm /var/lib/rancher/k3s/server/db/reset-flag",
 	}
