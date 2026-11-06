@@ -1,5 +1,8 @@
 version: 2
 
+# explicit so forks with a different repo name still produce k3k artifacts
+project_name: k3k
+
 release:
   draft: true
   replace_existing_draft: true
@@ -12,6 +15,7 @@ before:
 
 builds:
   - id: k3k
+    binary: k3k
     env:
       - CGO_ENABLED=0
     goos:
