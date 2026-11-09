@@ -291,6 +291,11 @@ type SyncConfig struct {
 	// +kubebuilder:default={"enabled": true}
 	// +optional
 	Services ServiceSyncConfig `json:"services"`
+	// EndpointSlices resources sync configuration.
+	//
+	// +kubebuilder:default={"enabled": true}
+	// +optional
+	EndpointSlices EndpointSliceSyncConfig `json:"endpointSlices"`
 	// ConfigMaps resources sync configuration.
 	//
 	// +kubebuilder:default={"enabled": true}
@@ -340,6 +345,21 @@ type SecretSyncConfig struct {
 
 // ServiceSyncConfig specifies the sync options for Services.
 type ServiceSyncConfig struct {
+	// Enabled is an on/off switch for syncing resources.
+	//
+	// +kubebuilder:default=true
+	// +required
+	Enabled bool `json:"enabled"`
+
+	// Selector specifies set of labels of the resources that will be synced, if empty
+	// then all resources of the given type will be synced.
+	//
+	// +optional
+	Selector map[string]string `json:"selector,omitempty"`
+}
+
+// EndpointSliceSyncConfig specifies the sync options for EndpointSlices.
+type EndpointSliceSyncConfig struct {
 	// Enabled is an on/off switch for syncing resources.
 	//
 	// +kubebuilder:default=true
