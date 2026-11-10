@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	endpointSliceControllerName = "endpointslice-syncer-controller"
-	kubernetesControllerName    = "endpointslice-controller.k8s.io"
-	endpointSliceFinalizerName  = "endpointslice.k3k.io/finalizer"
+	endpointSliceControllerName           = "endpointslice-syncer-controller"
+	kubernetesEndpointSliceControllerName = "endpointslice-controller.k8s.io"
+	endpointSliceFinalizerName            = "endpointslice.k3k.io/finalizer"
 )
 
 // EndpointSliceReconciler syncs the EndpointSlices of the virtual cluster to the host cluster.
@@ -116,6 +116,8 @@ func (r *EndpointSliceReconciler) Reconcile(ctx context.Context, req reconcile.R
 
 	log.Info("updating EndpointSlice on the host cluster")
 
+	syncedEndpointSlice.ResourceVersion = hostEndpointSlice.ResourceVersion
+
 	return reconcile.Result{}, r.HostClient.Update(ctx, syncedEndpointSlice)
 }
 
@@ -141,7 +143,7 @@ func (r *EndpointSliceReconciler) filterResources(object ctrlruntimeclient.Objec
 	}
 
 	// only handle endpointSlices that are not managed by the endpointSlices controller
-	if val, ok := object.GetLabels()[discoveryv1.LabelManagedBy]; ok && val == kubernetesControllerName {
+	if val := object.GetLabels()[discoveryv1.LabelManagedBy]; val == kubernetesEndpointSliceControllerName {
 		return false
 	}
 
