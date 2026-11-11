@@ -2295,7 +2295,7 @@ spec:
                     type: object
                   endpointSlices:
                     default:
-                      enabled: true
+                      enabled: false
                     description: EndpointSlices resources sync configuration.
                     properties:
                       enabled:

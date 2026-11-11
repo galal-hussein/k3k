@@ -293,7 +293,7 @@ type SyncConfig struct {
 	Services ServiceSyncConfig `json:"services"`
 	// EndpointSlices resources sync configuration.
 	//
-	// +kubebuilder:default={"enabled": true}
+	// +kubebuilder:default={"enabled": false}
 	// +optional
 	EndpointSlices EndpointSliceSyncConfig `json:"endpointSlices"`
 	// ConfigMaps resources sync configuration.
