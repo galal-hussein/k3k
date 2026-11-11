@@ -700,7 +700,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `services` _[ServiceSyncConfig](#servicesyncconfig)_ | Services resources sync configuration. | \{ enabled:true \} | Optional: \{\} <br /> |
-| `endpointSlices` _[EndpointSliceSyncConfig](#endpointslicesyncconfig)_ | EndpointSlices resources sync configuration. | \{ enabled:true \} | Optional: \{\} <br /> |
+| `endpointSlices` _[EndpointSliceSyncConfig](#endpointslicesyncconfig)_ | EndpointSlices resources sync configuration. | \{ enabled:false \} | Optional: \{\} <br /> |
 | `configMaps` _[ConfigMapSyncConfig](#configmapsyncconfig)_ | ConfigMaps resources sync configuration. | \{ enabled:true \} | Optional: \{\} <br /> |
 | `secrets` _[SecretSyncConfig](#secretsyncconfig)_ | Secrets resources sync configuration. | \{ enabled:true \} | Optional: \{\} <br /> |
 | `ingresses` _[IngressSyncConfig](#ingresssyncconfig)_ | Ingresses resources sync configuration. | \{ enabled:false \} | Optional: \{\} <br /> |
