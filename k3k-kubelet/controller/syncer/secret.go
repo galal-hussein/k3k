@@ -17,6 +17,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -62,14 +63,8 @@ func (s *SecretSyncer) filterResources(object client.Object) bool {
 		return false
 	}
 
-	appliedSync := cluster.Spec.Sync.DeepCopy()
-
-	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
-	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
-		appliedSync = cluster.Status.Policy.Sync
-	}
 	// check for Secrets Sync Config
-	syncConfig := appliedSync.Secrets
+	syncConfig := controller.AppliedSync(&cluster).Secrets
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {

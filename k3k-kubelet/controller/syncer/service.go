@@ -17,6 +17,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -132,14 +133,8 @@ func (r *ServiceReconciler) filterResources(object ctrlruntimeclient.Object) boo
 		return false
 	}
 
-	appliedSync := cluster.Spec.Sync.DeepCopy()
-
-	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
-	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
-		appliedSync = cluster.Status.Policy.Sync
-	}
 	// check for serviceSyncConfig
-	syncConfig := appliedSync.Services
+	syncConfig := controller.AppliedSync(&cluster).Services
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {
