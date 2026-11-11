@@ -62,8 +62,14 @@ func (s *SecretSyncer) filterResources(object client.Object) bool {
 		return false
 	}
 
+	appliedSync := cluster.Spec.Sync.DeepCopy()
+
+	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
+	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
+		appliedSync = cluster.Status.Policy.Sync
+	}
 	// check for Secrets Sync Config
-	syncConfig := cluster.Spec.Sync.Secrets
+	syncConfig := appliedSync.Secrets
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {

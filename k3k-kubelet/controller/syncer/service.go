@@ -132,8 +132,14 @@ func (r *ServiceReconciler) filterResources(object ctrlruntimeclient.Object) boo
 		return false
 	}
 
+	appliedSync := cluster.Spec.Sync.DeepCopy()
+
+	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
+	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
+		appliedSync = cluster.Status.Policy.Sync
+	}
 	// check for serviceSyncConfig
-	syncConfig := cluster.Spec.Sync.Services
+	syncConfig := appliedSync.Services
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {
