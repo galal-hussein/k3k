@@ -74,6 +74,15 @@ func K3SImage(cluster *v1beta1.Cluster, k3SImage string) string {
 	return k3SImage + ":" + k3sVersion.ImageTag()
 }
 
+// AppliedSync returns the sync config enforced by the cluster's policy, if any, or the cluster's own.
+func AppliedSync(cluster *v1beta1.Cluster) *v1beta1.SyncConfig {
+	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
+		return cluster.Status.Policy.Sync
+	}
+
+	return cluster.Spec.Sync
+}
+
 // FilterDNSNames returns only the DNS names of the given list, dropping the IP addresses.
 // It is useful for the fields that cannot hold an IP, like the hosts of an Ingress.
 func FilterDNSNames(names []string) []string {

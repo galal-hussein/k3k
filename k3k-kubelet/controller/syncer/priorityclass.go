@@ -20,6 +20,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -87,7 +88,7 @@ func (r *PriorityClassSyncer) filterResources(object ctrlruntimeclient.Object) b
 	}
 
 	// check for priorityClassConfig
-	syncConfig := cluster.Spec.Sync.PriorityClasses
+	syncConfig := controller.AppliedSync(&cluster).PriorityClasses
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {

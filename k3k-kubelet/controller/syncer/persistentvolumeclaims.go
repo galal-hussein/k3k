@@ -19,6 +19,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -66,7 +67,7 @@ func (r *PVCReconciler) filterResources(object ctrlruntimeclient.Object) bool {
 	}
 
 	// check for pvc config
-	syncConfig := cluster.Spec.Sync.PersistentVolumeClaims
+	syncConfig := controller.AppliedSync(&cluster).PersistentVolumeClaims
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {

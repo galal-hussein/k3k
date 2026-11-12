@@ -17,6 +17,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -63,7 +64,7 @@ func (s *SecretSyncer) filterResources(object client.Object) bool {
 	}
 
 	// check for Secrets Sync Config
-	syncConfig := cluster.Spec.Sync.Secrets
+	syncConfig := controller.AppliedSync(&cluster).Secrets
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {

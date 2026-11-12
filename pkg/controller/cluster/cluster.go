@@ -866,12 +866,7 @@ func (c *Reconciler) ensureStorageClasses(ctx context.Context, cluster *v1beta1.
 		return fmt.Errorf("failed creating virtual client: %w", err)
 	}
 
-	appliedSync := cluster.Spec.Sync.DeepCopy()
-
-	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
-	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
-		appliedSync = cluster.Status.Policy.Sync
-	}
+	appliedSync := controller.AppliedSync(cluster)
 
 	// If storageclass sync is disabled, clean up any managed storage classes.
 	if appliedSync == nil || !appliedSync.StorageClasses.Enabled {

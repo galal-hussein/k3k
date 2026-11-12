@@ -21,6 +21,7 @@ import (
 
 	"github.com/rancher/k3k/k3k-kubelet/translate"
 	"github.com/rancher/k3k/pkg/apis/k3k.io/v1beta1"
+	"github.com/rancher/k3k/pkg/controller"
 )
 
 const (
@@ -100,7 +101,7 @@ func (r *IngressReconciler) filterResources(object ctrlruntimeclient.Object) boo
 	}
 
 	// check for ingressConfig
-	syncConfig := cluster.Spec.Sync.Ingresses
+	syncConfig := controller.AppliedSync(&cluster).Ingresses
 
 	// If syncing is disabled, only process deletions to allow for cleanup.
 	if !syncConfig.Enabled {
@@ -131,14 +132,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req reconcile.Request
 		return reconcile.Result{}, err
 	}
 
-	appliedSync := cluster.Spec.Sync.DeepCopy()
-
-	// If a policy is applied to the virtual cluster we need to use its SyncConfig, if available
-	if cluster.Status.Policy != nil && cluster.Status.Policy.Sync != nil {
-		appliedSync = cluster.Status.Policy.Sync
-	}
-
-	syncConfig := appliedSync.Ingresses
+	syncConfig := controller.AppliedSync(&cluster).Ingresses
 
 	if err := r.VirtualClient.Get(ctx, req.NamespacedName, &virtIngress); err != nil {
 		return reconcile.Result{}, ctrlruntimeclient.IgnoreNotFound(err)
