@@ -362,7 +362,7 @@ type ServiceSyncConfig struct {
 type EndpointSliceSyncConfig struct {
 	// Enabled is an on/off switch for syncing resources.
 	//
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	// +required
 	Enabled bool `json:"enabled"`
 

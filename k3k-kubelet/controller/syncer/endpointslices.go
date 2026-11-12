@@ -153,6 +153,10 @@ func (r *EndpointSliceReconciler) filterResources(object ctrlruntimeclient.Objec
 		return false
 	}
 
+	if object.GetLabels()[discoveryv1.LabelServiceName] == "" {
+		return false
+	}
+
 	labelSelector := labels.SelectorFromSet(syncConfig.Selector)
 	if labelSelector.Empty() {
 		return true

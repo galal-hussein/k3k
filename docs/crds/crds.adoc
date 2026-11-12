@@ -458,7 +458,7 @@ _Appears In:_
 [cols="25a,55a,10a,10a", options="header"]
 |===
 | Field | Description | Default | Validation
-| *`enabled`* __boolean__ | Enabled is an on/off switch for syncing resources. + | true | Required: \{} +
+| *`enabled`* __boolean__ | Enabled is an on/off switch for syncing resources. + | false | Required: \{} +
 
 | *`selector`* __object (keys:string, values:string)__ | Selector specifies set of labels of the resources that will be synced, if empty +
 then all resources of the given type will be synced. + |  | Optional: \{} +

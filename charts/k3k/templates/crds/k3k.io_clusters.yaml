@@ -3179,7 +3179,7 @@ spec:
                     description: EndpointSlices resources sync configuration.
                     properties:
                       enabled:
-                        default: true
+                        default: false
                         description: Enabled is an on/off switch for syncing resources.
                         type: boolean
                       selector:
@@ -5857,7 +5857,7 @@ spec:
                         description: EndpointSlices resources sync configuration.
                         properties:
                           enabled:
-                            default: true
+                            default: false
                             description: Enabled is an on/off switch for syncing resources.
                             type: boolean
                           selector:

@@ -74,6 +74,55 @@ func TestEndpointSliceReconciler(t *testing.T) {
 	assert.Equal(t, gotVirtual.Ports[0].Port, gotHost.Ports[0].Port)
 }
 
+func TestEndpointSliceFilterResources(t *testing.T) {
+	withLabels := func(labels map[string]string) *discoveryv1.EndpointSlice {
+		eps := newTestEndpointSlice("test-endpointslice")
+		eps.Labels = labels
+
+		return eps
+	}
+
+	tests := []struct {
+		name     string
+		object   *discoveryv1.EndpointSlice
+		filtered bool
+	}{
+		{
+			name:     "with service name",
+			object:   withLabels(map[string]string{discoveryv1.LabelServiceName: "my-svc"}),
+			filtered: true,
+		},
+		{
+			name:     "without service name",
+			object:   withLabels(map[string]string{"special-label": "e2e"}),
+			filtered: false,
+		},
+		{
+			name:     "empty service name",
+			object:   withLabels(map[string]string{discoveryv1.LabelServiceName: ""}),
+			filtered: false,
+		},
+		{
+			name: "managed by endpointslice controller",
+			object: withLabels(map[string]string{
+				discoveryv1.LabelServiceName: "my-svc",
+				discoveryv1.LabelManagedBy:   kubernetesEndpointSliceControllerName,
+			}),
+			filtered: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cluster := newTestCluster(func(c *v1beta1.Cluster) {
+				c.Spec.Sync.EndpointSlices = v1beta1.EndpointSliceSyncConfig{Enabled: true}
+			})
+			syncer := newEndpointSliceReconciler(t, cluster, nil)
+			assert.Equal(t, tt.filtered, syncer.filterResources(tt.object))
+		})
+	}
+}
+
 func newEndpointSliceReconciler(t *testing.T, cluster *v1beta1.Cluster, virtualObjects []client.Object, hostObjects ...client.Object) *EndpointSliceReconciler {
 	t.Helper()
 
