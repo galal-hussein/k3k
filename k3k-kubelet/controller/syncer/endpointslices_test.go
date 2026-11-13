@@ -74,6 +74,46 @@ func TestEndpointSliceReconciler(t *testing.T) {
 	assert.Equal(t, gotVirtual.Ports[0].Port, gotHost.Ports[0].Port)
 }
 
+func TestEndpointSliceReconcilerTargetRef(t *testing.T) {
+	virtualObject := newTestEndpointSlice("test-endpointslice-targetref")
+	virtualObject.Endpoints = []discoveryv1.Endpoint{
+		{
+			Addresses: []string{fakeEndpointSliceAddress},
+			TargetRef: &corev1.ObjectReference{
+				Kind:            "Pod",
+				Name:            "my-pod",
+				Namespace:       virtualNamespace,
+				UID:             "virtual-pod-uid",
+				ResourceVersion: "123",
+			},
+		},
+		{
+			Addresses: []string{"2.2.2.2"},
+		},
+	}
+
+	cluster := newTestCluster(func(c *v1beta1.Cluster) {
+		c.Spec.Sync.EndpointSlices = v1beta1.EndpointSliceSyncConfig{Enabled: true}
+	})
+	syncer := newEndpointSliceReconciler(t, cluster, []client.Object{virtualObject})
+	request := reconcile.Request{NamespacedName: client.ObjectKeyFromObject(virtualObject)}
+
+	_, err := syncer.Reconcile(t.Context(), request)
+	require.NoError(t, err)
+
+	var gotHost discoveryv1.EndpointSlice
+	require.NoError(t, syncer.HostClient.Get(t.Context(), syncer.Translator.NamespacedName(virtualObject), &gotHost))
+	require.Len(t, gotHost.Endpoints, 2)
+
+	expected := &corev1.ObjectReference{
+		Kind:      "Pod",
+		Name:      syncer.Translator.TranslateName(virtualNamespace, "my-pod"),
+		Namespace: testClusterNamespace,
+	}
+	assert.Equal(t, expected, gotHost.Endpoints[0].TargetRef)
+	assert.Nil(t, gotHost.Endpoints[1].TargetRef)
+}
+
 func TestEndpointSliceFilterResources(t *testing.T) {
 	withLabels := func(labels map[string]string) *discoveryv1.EndpointSlice {
 		eps := newTestEndpointSlice("test-endpointslice")
@@ -83,9 +123,10 @@ func TestEndpointSliceFilterResources(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		object   *discoveryv1.EndpointSlice
-		filtered bool
+		name             string
+		object           *discoveryv1.EndpointSlice
+		servicesDisabled bool
+		filtered         bool
 	}{
 		{
 			name:     "with service name",
@@ -110,12 +151,19 @@ func TestEndpointSliceFilterResources(t *testing.T) {
 			}),
 			filtered: false,
 		},
+		{
+			name:             "services sync disabled",
+			object:           withLabels(map[string]string{discoveryv1.LabelServiceName: "my-svc"}),
+			servicesDisabled: true,
+			filtered:         false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cluster := newTestCluster(func(c *v1beta1.Cluster) {
 				c.Spec.Sync.EndpointSlices = v1beta1.EndpointSliceSyncConfig{Enabled: true}
+				c.Spec.Sync.Services = v1beta1.ServiceSyncConfig{Enabled: !tt.servicesDisabled}
 			})
 			syncer := newEndpointSliceReconciler(t, cluster, nil)
 			assert.Equal(t, tt.filtered, syncer.filterResources(tt.object))

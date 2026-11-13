@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -182,7 +182,7 @@ func (r *EndpointSliceReconciler) endpointSlice(obj *discoveryv1.EndpointSlice) 
 		}
 
 		targetRef := hostEndpointSlice.Endpoints[i].TargetRef
-		hostEndpointSlice.Endpoints[i].TargetRef = &v1.ObjectReference{
+		hostEndpointSlice.Endpoints[i].TargetRef = &corev1.ObjectReference{
 			Kind:      targetRef.Kind,
 			Name:      r.Translator.TranslateName(targetRef.Namespace, targetRef.Name),
 			Namespace: hostEndpointSlice.Namespace,
